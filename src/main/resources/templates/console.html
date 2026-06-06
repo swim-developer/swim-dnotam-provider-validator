@@ -1,0 +1,19 @@
+{#include 'layout.html'}
+{#title}Console{/title}
+{#content}
+<div class="page-header-actions">
+    <div class="page-header">
+        <h1 class="page-title">Client Console</h1>
+        <p class="page-description">API calls, errors, and debug information</p>
+    </div>
+    <button class="btn btn-secondary" onclick="clearConsole()">Clear Console</button>
+</div>
+
+<div class="full-console-container">
+    <div class="full-console-body" id="full-console-body">
+        <div class="console-empty">No events yet...</div>
+    </div>
+</div>
+{/content}
+{/include}
+

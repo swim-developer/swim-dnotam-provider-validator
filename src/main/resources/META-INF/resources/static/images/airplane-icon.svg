@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <g transform="translate(256,256) rotate(45)">
+    <!-- Fuselage -->
+    <ellipse cx="0" cy="0" rx="40" ry="160" fill="#5C7CFA"/>
+    <!-- Nose -->
+    <ellipse cx="0" cy="-170" rx="25" ry="40" fill="#5C7CFA"/>
+    <!-- Main Wings -->
+    <ellipse cx="0" cy="20" rx="180" ry="35" fill="#5C7CFA"/>
+    <!-- Tail Wings -->
+    <ellipse cx="0" cy="130" rx="70" ry="20" fill="#5C7CFA"/>
+    <!-- Tail Fin -->
+    <ellipse cx="0" cy="140" rx="12" ry="45" fill="#5C7CFA"/>
+    <!-- Window line -->
+    <ellipse cx="0" cy="-40" rx="8" ry="80" fill="#A5D8FF" opacity="0.6"/>
+    <!-- Engine Left -->
+    <ellipse cx="-70" cy="30" rx="15" ry="30" fill="#4C6EF5"/>
+    <!-- Engine Right -->
+    <ellipse cx="70" cy="30" rx="15" ry="30" fill="#4C6EF5"/>
+  </g>
+</svg>

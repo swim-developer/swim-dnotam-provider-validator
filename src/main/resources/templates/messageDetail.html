@@ -1,0 +1,105 @@
+{#include layout}
+{#title}Message Detail{/title}
+{#content}
+<div class="page-header">
+    <a href="/ui/messages" class="btn btn-secondary">← Back to Messages</a>
+    <h2 class="page-title">Message Detail</h2>
+</div>
+
+{#if message}
+<div class="message-detail-grid">
+    <div class="card">
+        <h3 class="card-title">Event Information</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Event ID</span>
+                <span class="detail-value">{message.eventId ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Scenario</span>
+                <span class="detail-value">{message.eventScenario ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Airport/Heliport</span>
+                <span class="detail-value">{message.airportHeliport ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Airspace</span>
+                <span class="detail-value">{message.airspace ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Event Series</span>
+                <span class="detail-value">{message.eventSeries ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Publisher</span>
+                <span class="detail-value">{message.publisher ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Provider</span>
+                <span class="detail-value">{message.provider ?: '-'}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Validity Period</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Valid From</span>
+                <span class="detail-value">{message.validFrom ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Valid To</span>
+                <span class="detail-value">{message.validTo ?: '-'}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Message Metadata</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Message ID</span>
+                <span class="detail-value">{message.messageId ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Subscription ID</span>
+                <span class="detail-value">{message.subscriptionId ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Queue Name</span>
+                <span class="detail-value">{message.queueName ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Content Type</span>
+                <span class="detail-value">{message.contentType ?: '-'}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Received At</span>
+                <span class="detail-value">{message.receivedAt}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card full-width">
+        <h3 class="card-title">AIXM Message Body</h3>
+        <pre class="xml-content"><code class="language-xml">{message.body}</code></pre>
+    </div>
+</div>
+{#else}
+<div class="card">
+    <p class="empty-state">Message not found.</p>
+</div>
+{/if}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Prism !== 'undefined') {
+        Prism.highlightAll();
+    }
+});
+</script>
+{/content}
+{/include}
+

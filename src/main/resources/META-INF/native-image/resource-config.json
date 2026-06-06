@@ -1,0 +1,29 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "com/sun/org/apache/xerces/internal/impl/msg/.*\\.properties"
+      },
+      {
+        "pattern": "com/sun/org/apache/xerces/internal/impl/xpath/regex/.*\\.properties"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.XMLSchemaMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.XMLMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.SAXMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.DatatypeMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.xpath.regex.message"
+    }
+  ]
+}

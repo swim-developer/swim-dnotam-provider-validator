@@ -1,0 +1,9 @@
+[
+  {
+    "name": "com.sun.org.apache.xerces.internal.impl.msg.XMLSchemaMessages",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]

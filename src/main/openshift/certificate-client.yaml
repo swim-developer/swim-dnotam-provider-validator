@@ -1,0 +1,33 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: swim-dnotam-client-cert
+spec:
+  secretName: swim-dnotam-provider-validator-certs
+  duration: 2160h
+  renewBefore: 360h
+  commonName: swim-dnotam-client
+  usages:
+    - client auth
+    - digital signature
+    - key encipherment
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
+    rotationPolicy: Always
+  issuerRef:
+    name: swim-ca-issuer
+    kind: ClusterIssuer
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        name: swim-dnotam-provider-validator-passwords
+        key: password
+    jks:
+      create: true
+      passwordSecretRef:
+        name: swim-dnotam-provider-validator-passwords
+        key: password
+

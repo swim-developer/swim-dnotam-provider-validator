@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: swim-dnotam-provider-validator-data
+  labels:
+    app: swim-dnotam-provider-validator
+    app.kubernetes.io/name: swim-dnotam-provider-validator
+    app.kubernetes.io/component: dnotam-provider-validator
+    app.kubernetes.io/part-of: swim-dnotam
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+

@@ -1,0 +1,239 @@
+{#include layout}
+    {#title}Conformance Testing{/title}
+    {#content}
+    <div class="conformance-page">
+    <div class="page-header">
+        <h2 class="page-title">Provider Conformance Testing</h2>
+        <p class="page-description">
+            Automated validation suite for EUR SWIM Registry Digital NOTAM v1.0.0 specification compliance.
+            Execute individual scenarios or complete test suites to validate provider conformance.
+        </p>
+    </div>
+
+    <div class="test-control-panel">
+        <div class="card">
+            <h3 class="card-title">Test Configuration</h3>
+            <div class="form-group">
+                <label class="form-label" for="providerUrl">Provider URL</label>
+                <input type="text" id="providerUrl" class="form-control"
+                       placeholder="https://swim-dnotam-provider:8080"
+                       value="https://localhost:8443">
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" onclick="loadScenarios()">
+                    Load Test Scenarios
+                </button>
+                <button type="button" class="btn btn-success" onclick="runSuite('smoke')">
+                    Run Smoke Test Suite
+                </button>
+                <button type="button" class="btn btn-success" onclick="runSuite('implemented')">
+                    Run All Implemented Tests
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-results-summary" id="results-summary" style="display: none;">
+        <div class="card">
+            <h3 class="card-title">Test Results Summary</h3>
+            <div class="results-stats" id="results-stats"></div>
+        </div>
+    </div>
+
+    <div class="test-scenarios">
+        <div class="card">
+            <h3 class="card-title">Available Test Scenarios</h3>
+            <div class="scenario-filters">
+                <button type="button" class="filter-btn active" onclick="filterScenarios(this, 'all')">All</button>
+                <button type="button" class="filter-btn" onclick="filterScenarios(this, 'REST API')">REST API</button>
+                <button type="button" class="filter-btn" onclick="filterScenarios(this, 'Data Model')">Data Model</button>
+                <button type="button" class="filter-btn" onclick="filterScenarios(this, 'Lifecycle')">Lifecycle</button>
+                <button type="button" class="filter-btn" onclick="filterScenarios(this, 'IMPLEMENTED')">Implemented Only</button>
+            </div>
+            <div id="scenarios-container" class="scenarios-list">
+                <p class="loading-message">Click &quot;Load Test Scenarios&quot; to begin...</p>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let scenarios = [];
+        let currentFilter = 'all';
+
+        async function loadScenarios() {
+            try {
+                const response = await fetch('/api/conformance/scenarios');
+                scenarios = await response.json();
+                renderScenarios();
+            } catch (error) {
+                console.error('Failed to load scenarios', error);
+                alert('Failed to load test scenarios: ' + error.message);
+            }
+        }
+
+        function filterScenarios(button, filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.scenario-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            renderScenarios();
+        }
+
+        function renderScenarios() {
+            const container = document.getElementById('scenarios-container');
+            let filtered = scenarios;
+
+            if (currentFilter === 'IMPLEMENTED') {
+                filtered = scenarios.filter(s => s.implementationStatus === 'IMPLEMENTED');
+            } else if (currentFilter !== 'all') {
+                filtered = scenarios.filter(s => s.category === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="loading-message">No scenarios found for this filter.</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(scenario =>
+                '<div class="scenario-item ' + scenario.implementationStatus.toLowerCase() + '" data-id="' + scenario.id + '">' +
+                    '<div class="scenario-header">' +
+                        '<div>' +
+                            '<span class="scenario-id">' + scenario.id + '</span>' +
+                            '<span class="scenario-category">' + scenario.category + '</span>' +
+                            '<span class="scenario-status status-' + scenario.implementationStatus.toLowerCase() + '">' +
+                                scenario.implementationStatus +
+                            '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="scenario-title">' + scenario.name + '</div>' +
+                    '<div class="scenario-description">' + scenario.description + '</div>' +
+                    '<div class="scenario-detail"><strong>Procedure:</strong> ' + scenario.procedure + '</div>' +
+                    '<div class="scenario-detail"><strong>Verification:</strong> ' + scenario.verification + '</div>' +
+                    '<div class="scenario-actions">' +
+                        (scenario.implementationStatus === 'IMPLEMENTED'
+                            ? '<button type="button" class="btn btn-primary" onclick="runSingleTest(\'' + scenario.id + '\')">Run Test</button>'
+                            : '<button type="button" class="btn btn-secondary" disabled>Not Implemented</button>'
+                        ) +
+                    '</div>' +
+                    '<div id="result-' + scenario.id + '"></div>' +
+                '</div>'
+            ).join('');
+        }
+
+        async function runSingleTest(scenarioId) {
+            const providerUrl = document.getElementById('providerUrl').value;
+            if (!providerUrl) {
+                alert('Please enter a Provider URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result-' + scenarioId);
+            resultDiv.innerHTML = '<p class="scenario-detail">Running test...</p>';
+
+            try {
+                const token = window.keycloakInstance?.token || 'test-token';
+                const response = await fetch('/api/conformance/test?scenarioId=' + scenarioId + '&providerUrl=' + encodeURIComponent(providerUrl), {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const result = await response.json();
+                renderTestResult(result, resultDiv);
+            } catch (error) {
+                console.error('Test failed', error);
+                resultDiv.innerHTML = '<div class="test-result result-error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function runSuite(suiteName) {
+            const providerUrl = document.getElementById('providerUrl').value;
+            if (!providerUrl) {
+                alert('Please enter a Provider URL');
+                return;
+            }
+
+            const summaryDiv = document.getElementById('results-summary');
+            const statsDiv = document.getElementById('results-stats');
+            summaryDiv.style.display = 'block';
+            statsDiv.innerHTML = '<p class="loading-message">Running test suite...</p>';
+
+            try {
+                const token = window.keycloakInstance?.token || 'test-token';
+                const response = await fetch('/api/conformance/test/suite?suite=' + suiteName + '&providerUrl=' + encodeURIComponent(providerUrl), {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const data = await response.json();
+                renderSuiteResults(data);
+            } catch (error) {
+                console.error('Suite execution failed', error);
+                statsDiv.innerHTML = '<p class="scenario-detail">Error: ' + error.message + '</p>';
+            }
+        }
+
+        function renderSuiteResults(data) {
+            const statsDiv = document.getElementById('results-stats');
+            statsDiv.innerHTML =
+                '<div class="conformance-stat-card pass">' +
+                    '<div class="conformance-stat-value pass">' + data.passed + '</div>' +
+                    '<div class="conformance-stat-label">Passed</div>' +
+                '</div>' +
+                '<div class="conformance-stat-card fail">' +
+                    '<div class="conformance-stat-value fail">' + data.failed + '</div>' +
+                    '<div class="conformance-stat-label">Failed</div>' +
+                '</div>' +
+                '<div class="conformance-stat-card err">' +
+                    '<div class="conformance-stat-value err">' + data.errors + '</div>' +
+                    '<div class="conformance-stat-label">Errors</div>' +
+                '</div>' +
+                '<div class="conformance-stat-card skip">' +
+                    '<div class="conformance-stat-value skip">' + data.skipped + '</div>' +
+                    '<div class="conformance-stat-label">Skipped</div>' +
+                '</div>';
+
+            data.results.forEach(result => {
+                const resultDiv = document.getElementById('result-' + result.scenarioId);
+                if (resultDiv) {
+                    renderTestResult(result, resultDiv);
+                }
+            });
+        }
+
+        function renderTestResult(result, container) {
+            const outcomeClass = 'result-' + result.outcome.toLowerCase();
+            const outcomeIcon = {
+                'PASS': 'OK',
+                'FAIL': 'FAIL',
+                'ERROR': 'ERR',
+                'SKIP': 'SKIP'
+            }[result.outcome];
+
+            let assertionsHtml = '';
+            if (result.assertions && result.assertions.length > 0) {
+                assertionsHtml = '<div class="assertions-list">' +
+                    result.assertions.map(a =>
+                        '<div class="assertion-item assertion-' + (a.passed ? 'pass' : 'fail') + '">' + a.name + ': ' + a.message + '</div>'
+                    ).join('') +
+                    '</div>';
+            }
+
+            container.innerHTML =
+                '<div class="test-result ' + outcomeClass + '">' +
+                    '<div><strong>' + outcomeIcon + ' ' + result.outcome + '</strong> (' + result.durationMs + 'ms)</div>' +
+                    (result.errorMessage ? '<div class="scenario-detail">Error: ' + result.errorMessage + '</div>' : '') +
+                    assertionsHtml +
+                    (result.httpStatus ? '<div class="scenario-detail">HTTP ' + result.httpStatus + '</div>' : '') +
+                '</div>';
+        }
+
+        window.addEventListener('load', () => {
+            loadScenarios();
+        });
+    </script>
+    {/content}
+{/include}

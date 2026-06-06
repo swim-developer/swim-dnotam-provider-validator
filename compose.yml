@@ -1,0 +1,43 @@
+# Local development infrastructure for swim-dnotam-provider-validator.
+#
+# Starts:
+#   - dnotam-provider-validator-mariadb : validator persistence
+#
+# This validator connects to a running swim-dnotam-provider instance (external).
+# Configure SWIM_PROVIDER_API_URLS, SWIM_PROVIDER_AMQP_HOST, and KEYCLOAK_URL
+# to point at your provider before running.
+#
+# Usage:
+#   podman compose up -d
+#   ./mvnw quarkus:dev   (starts validator UI on port 8080)
+
+services:
+
+  dnotam-provider-validator-mariadb:
+    image: docker.io/library/mariadb:12-ubi
+    container_name: dnotam-provider-validator-mariadb
+    ports:
+      - "3308:3306"
+    environment:
+      MARIADB_DATABASE: swim_client
+      MARIADB_USER: swim
+      MARIADB_PASSWORD: swim
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - dnotam-provider-validator-mariadb-data:/var/lib/mysql
+    networks:
+      - swim-network
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  dnotam-provider-validator-mariadb-data:
+
+networks:
+  swim-network:
+    name: swim-dnotam-provider-validator-network
+    driver: bridge

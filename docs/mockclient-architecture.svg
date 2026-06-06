@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200" font-family="Arial, sans-serif">
+
+  <text x="350" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#212121">swim-dnotam-provider-validator, Test Harness</text>
+
+  <!-- SUT -->
+  <rect x="20" y="50" width="120" height="50" rx="6" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/>
+  <text x="80" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#b71c1c">SUT</text>
+  <text x="80" y="85" text-anchor="middle" font-size="10" fill="#546e7a">DNOTAM Provider</text>
+
+  <line x1="140" y1="75" x2="190" y2="75" stroke="#757575" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- MockClient box -->
+  <rect x="190" y="40" width="180" height="70" rx="6" fill="#fff8e1" stroke="#f57f17" stroke-width="2"/>
+  <text x="280" y="62" text-anchor="middle" font-size="11" font-weight="bold" fill="#e65100">Provider Validator</text>
+  <text x="280" y="78" text-anchor="middle" font-size="10" fill="#546e7a">Creates subscription via REST</text>
+  <text x="280" y="92" text-anchor="middle" font-size="10" fill="#546e7a">Receives AMQP events / asserts</text>
+
+  <line x1="370" y1="55" x2="420" y2="55" stroke="#757575" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="370" y1="90" x2="420" y2="90" stroke="#757575" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrg)"/>
+
+  <!-- REST -->
+  <rect x="420" y="35" width="120" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="480" y="51" text-anchor="middle" font-size="10" font-weight="bold" fill="#0d47a1">REST API</text>
+  <text x="480" y="66" text-anchor="middle" font-size="9" fill="#546e7a">subscription lifecycle</text>
+
+  <!-- AMQP -->
+  <rect x="420" y="78" width="120" height="40" rx="6" fill="#e8eaf6" stroke="#3949ab" stroke-width="1"/>
+  <text x="480" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#1a237e">AMQP</text>
+  <text x="480" y="109" text-anchor="middle" font-size="9" fill="#546e7a">event reception</text>
+
+  <text x="350" y="155" text-anchor="middle" font-size="10" fill="#78909c">Validator acts as a real SWIM subscriber, it calls the Provider REST API and reads published events</text>
+
+  <defs>
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#757575"/>
+    </marker>
+    <marker id="arrg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#bdbdbd"/>
+    </marker>
+  </defs>
+
+</svg>

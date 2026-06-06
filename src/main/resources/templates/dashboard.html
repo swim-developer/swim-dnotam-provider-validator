@@ -1,0 +1,235 @@
+{#include layout}
+{#content}
+
+<div class="page-header">
+    <h2 class="page-title">Dashboard</h2>
+    <p class="page-description">SWIM DNOTAM Provider Validator - ANSP Conformance Testing</p>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-value" id="auth-status-icon">...</div>
+        <div class="stat-label">Authentication</div>
+        <div class="stat-detail" id="auth-user">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="mtls-status-icon">...</div>
+        <div class="stat-label">mTLS Proxy</div>
+        <div class="stat-detail" id="mtls-detail">Loading...</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="sse-status-icon">...</div>
+        <div class="stat-label">SSE Console</div>
+        <div class="stat-detail" id="sse-detail">Loading...</div>
+    </div>
+</div>
+
+<div class="dashboard-panels">
+    <div class="card">
+        <h3 class="card-title">Backend Configuration</h3>
+        <table class="config-table">
+            <tbody>
+                <tr>
+                    <td class="config-label">Keycloak URL</td>
+                    <td class="config-value" id="cfg-keycloak-url">-</td>
+                </tr>
+                <tr>
+                    <td class="config-label">Keycloak Realm</td>
+                    <td class="config-value" id="cfg-keycloak-realm">-</td>
+                </tr>
+                <tr id="cfg-keystore-row" style="display: none;">
+                    <td class="config-label">Keystore Path</td>
+                    <td class="config-value" id="cfg-keystore-path">-</td>
+                </tr>
+                <tr id="cfg-truststore-row" style="display: none;">
+                    <td class="config-label">Truststore Path</td>
+                    <td class="config-value" id="cfg-truststore-path">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Getting Started</h3>
+        <ol class="getting-started-list">
+            <li>Go to <strong>Token</strong> page to acquire your JWT token</li>
+            <li>Use <strong>Provider API</strong> to explore and test endpoints</li>
+            <li>Toggle <strong>Backend</strong> mode for mTLS-protected calls</li>
+            <li>Monitor activity in the <strong>Console</strong></li>
+        </ol>
+    </div>
+</div>
+
+<style>
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-detail {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    word-break: break-all;
+}
+
+.dashboard-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.config-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.config-table tr {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.config-table tr:last-child {
+    border-bottom: none;
+}
+
+.config-label {
+    padding: 12px 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    width: 40%;
+}
+
+.config-value {
+    padding: 12px 0;
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 0.875rem;
+    word-break: break-all;
+}
+
+.getting-started-list {
+    color: var(--text-secondary);
+    margin-left: 20px;
+    line-height: 2.2;
+}
+
+.getting-started-list strong {
+    color: var(--accent);
+}
+
+.status-ok { color: #10b981; }
+.status-error { color: #ef4444; }
+.status-warning { color: #f59e0b; }
+.status-loading { color: var(--text-muted); }
+</style>
+
+<script>
+async function loadStatus() {
+    try {
+        const response = await fetch('/api/status');
+        const status = await response.json();
+
+        document.getElementById('cfg-keycloak-url').textContent = status.keycloakUrl || '-';
+        document.getElementById('cfg-keycloak-realm').textContent = status.keycloakRealm || '-';
+
+        const mtlsIcon = document.getElementById('mtls-status-icon');
+        const mtlsDetail = document.getElementById('mtls-detail');
+
+        if (status.mtlsEnabled) {
+            mtlsIcon.textContent = '🔐';
+            mtlsIcon.classList.add('status-ok');
+            mtlsDetail.textContent = 'Active';
+
+            document.getElementById('cfg-keystore-row').style.display = '';
+            document.getElementById('cfg-truststore-row').style.display = '';
+            document.getElementById('cfg-keystore-path').textContent = status.keystorePath || '-';
+            document.getElementById('cfg-truststore-path').textContent = status.truststorePath || '-';
+        } else {
+            mtlsIcon.textContent = '🔓';
+            mtlsIcon.classList.add('status-warning');
+            mtlsDetail.textContent = 'Not configured';
+        }
+
+        const sseIcon = document.getElementById('sse-status-icon');
+        const sseDetail = document.getElementById('sse-detail');
+
+        if (status.sseEnabled) {
+            sseIcon.textContent = '📡';
+            sseIcon.classList.add('status-ok');
+            sseDetail.textContent = 'Available';
+        } else {
+            sseIcon.textContent = '📴';
+            sseIcon.classList.add('status-error');
+            sseDetail.textContent = 'Disabled';
+        }
+
+    } catch (err) {
+        console.error('Failed to load status:', err);
+        document.getElementById('mtls-status-icon').textContent = '?';
+        document.getElementById('sse-status-icon').textContent = '?';
+    }
+}
+
+async function initAuth() {
+    try {
+        const authenticated = await window.keycloakReady;
+        const keycloak = window.keycloakInstance;
+        
+        const icon = document.getElementById('auth-status-icon');
+        const userDetail = document.getElementById('auth-user');
+        
+        if (authenticated && keycloak) {
+            icon.textContent = '✓';
+            icon.classList.add('status-ok');
+            userDetail.textContent = keycloak.tokenParsed?.preferred_username || '-';
+        } else {
+            icon.textContent = '✗';
+            icon.classList.add('status-error');
+            userDetail.textContent = 'Not authenticated';
+        }
+    } catch (err) {
+        console.error('Auth init failed:', err);
+        document.getElementById('auth-status-icon').textContent = '?';
+        document.getElementById('auth-status-icon').classList.add('status-warning');
+    }
+}
+
+function checkSseConnection() {
+    const sseIcon = document.getElementById('sse-status-icon');
+    const sseDetail = document.getElementById('sse-detail');
+
+    if (typeof window.sseConnected !== 'undefined' && window.sseConnected) {
+        sseDetail.textContent = 'Connected';
+    }
+}
+
+loadStatus();
+initAuth();
+setTimeout(checkSseConnection, 2000);
+</script>
+
+{/content}
+{/include}

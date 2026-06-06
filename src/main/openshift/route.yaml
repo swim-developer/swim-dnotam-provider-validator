@@ -1,0 +1,21 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: swim-dnotam-provider-validator
+  labels:
+    app: swim-dnotam-provider-validator
+    app.kubernetes.io/name: swim-dnotam-provider-validator
+    app.kubernetes.io/component: dnotam-provider-validator
+    app.kubernetes.io/part-of: swim-dnotam
+spec:
+  to:
+    kind: Service
+    name: swim-dnotam-provider-validator
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+

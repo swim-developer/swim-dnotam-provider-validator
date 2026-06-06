@@ -1,0 +1,564 @@
+{#include layout}
+{#content}
+
+<div class="page-header">
+    <h2 class="page-title">AMQP Broker</h2>
+    <p class="page-description">Manage connection to the SWIM message broker</p>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-value" id="amqp-status-icon">...</div>
+        <div class="stat-label">Connection Status</div>
+        <div class="stat-detail" id="amqp-status-text">Loading...</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="queue-count">-</div>
+        <div class="stat-label">Subscriptions</div>
+        <div class="stat-detail">Active queues</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">Broker Configuration</h3>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="amqp-host">Host</label>
+            <input type="text" id="amqp-host" class="form-input" placeholder="e.g. broker.swim.local">
+        </div>
+        <div class="form-group">
+            <label for="amqp-port">Port</label>
+            <input type="number" id="amqp-port" class="form-input" placeholder="5672">
+        </div>
+    </div>
+    <div class="card-actions">
+        <button id="connect-btn" class="btn btn-primary" onclick="connectBroker()">Connect</button>
+        <button id="disconnect-btn" class="btn btn-secondary" onclick="disconnectBroker()" style="display: none;">Disconnect</button>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">Subscriptions</h3>
+    <div id="subscriptions-loading" class="loading-message">Loading subscriptions...</div>
+    <table id="subscriptions-table" class="data-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>Subscription ID</th>
+                <th>Queue Name</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody id="subscriptions-body">
+        </tbody>
+    </table>
+    <div id="no-subscriptions" class="empty-message" style="display: none;">
+        No subscriptions found for this user.
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">Queue Access Test</h3>
+    <p class="card-description">Test queue access restrictions. The broker should deny access to queues that don't belong to you.</p>
+    <div class="queue-test-form">
+        <div class="form-group" style="flex: 1;">
+            <label for="test-queue-name">Queue Name</label>
+            <input type="text" id="test-queue-name" class="form-input" placeholder="e.g. DNOTAM-other-user-subscription-id">
+        </div>
+        <button id="test-queue-btn" class="btn btn-secondary" onclick="testQueueAccess()" disabled>Test Access</button>
+    </div>
+    <div id="queue-test-result" class="queue-test-result" style="display: none;"></div>
+</div>
+
+<style>
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.form-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.card-description {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+}
+
+.queue-test-form {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.queue-test-form .form-group {
+    margin-bottom: 0;
+}
+
+.queue-test-form .btn {
+    height: 42px;
+    white-space: nowrap;
+}
+
+.queue-test-result {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.queue-test-result.success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+.queue-test-result.error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.queue-test-result.info {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #3b82f6;
+}
+
+.card-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.loading-message,
+.empty-message {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-badge.paused {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.status-badge.inactive {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+</style>
+
+<script>
+let keycloak;
+let heartbeatInterval;
+
+function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (keycloak && keycloak.token) {
+        headers['Authorization'] = 'Bearer ' + keycloak.token;
+    }
+    return headers;
+}
+
+async function refreshTokenIfNeeded() {
+    if (keycloak && keycloak.authenticated) {
+        try {
+            await keycloak.updateToken(30);
+            return true;
+        } catch (err) {
+            console.warn('Token refresh failed:', err);
+            return false;
+        }
+    }
+    return false;
+}
+
+async function initAmqpPage() {
+    try {
+        const authenticated = await window.keycloakReady;
+        keycloak = window.keycloakInstance;
+        
+        if (authenticated) {
+            enableFunctionality();
+            startHeartbeat();
+        } else {
+            showLoginRequired();
+        }
+    } catch (err) {
+        console.error('AMQP page init failed:', err);
+        showLoginRequired();
+    }
+}
+
+function showLoginRequired() {
+    document.getElementById('amqp-status-icon').textContent = '🔐';
+    document.getElementById('amqp-status-text').textContent = 'Login required';
+    document.getElementById('connect-btn').disabled = true;
+    document.getElementById('subscriptions-loading').textContent = 'Please login to view subscriptions';
+    
+    document.querySelectorAll('.form-grid .form-input').forEach(input => input.disabled = true);
+}
+
+function enableFunctionality() {
+    document.getElementById('connect-btn').disabled = false;
+    loadStatus();
+    loadSubscriptions();
+}
+
+function startHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+    }
+    
+    sendHeartbeat();
+    
+    heartbeatInterval = setInterval(async () => {
+        const valid = await refreshTokenIfNeeded();
+        if (valid) {
+            sendHeartbeat();
+        } else {
+            console.warn('Session expired');
+            stopHeartbeat();
+            showLoginRequired();
+        }
+    }, 60000);
+}
+
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+}
+
+async function sendHeartbeat() {
+    try {
+        const response = await fetch('/api/amqp/heartbeat', {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            console.warn('Heartbeat rejected - unauthorized');
+            stopHeartbeat();
+            showLoginRequired();
+        }
+    } catch (err) {
+        console.error('Heartbeat failed:', err);
+    }
+}
+
+async function loadStatus() {
+    try {
+        const response = await fetch('/api/amqp/status', {
+            headers: getAuthHeaders()
+        });
+        const status = await response.json();
+
+        document.getElementById('amqp-host').value = status.host || '';
+        document.getElementById('amqp-port').value = status.port || '';
+
+        if (!status.authenticated) {
+            showLoginRequired();
+            return;
+        }
+
+        updateConnectionUI(status.connected);
+    } catch (err) {
+        console.error('Failed to load AMQP status:', err);
+    }
+}
+
+function updateConnectionUI(connected) {
+    const icon = document.getElementById('amqp-status-icon');
+    const text = document.getElementById('amqp-status-text');
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const testQueueBtn = document.getElementById('test-queue-btn');
+    const configInputs = document.querySelectorAll('.form-grid .form-input');
+
+    text.style.color = '';
+
+    if (connected) {
+        icon.textContent = '🟢';
+        text.textContent = 'Connected';
+        connectBtn.style.display = 'none';
+        disconnectBtn.style.display = 'inline-block';
+        configInputs.forEach(input => input.disabled = true);
+        testQueueBtn.disabled = false;
+    } else {
+        icon.textContent = '🔴';
+        if (text.textContent === 'Connected' || text.textContent === 'Loading...') {
+        text.textContent = 'Disconnected';
+        }
+        connectBtn.style.display = 'inline-block';
+        disconnectBtn.style.display = 'none';
+        configInputs.forEach(input => input.disabled = false);
+        testQueueBtn.disabled = true;
+    }
+
+    window.amqpConnected = connected;
+    
+    if (typeof updateAmqpStatus === 'function') {
+        updateAmqpStatus(connected);
+    }
+}
+
+window.connectBroker = async function() {
+    if (!keycloak || !keycloak.authenticated) {
+        alert('Please login first');
+        return;
+    }
+
+    await refreshTokenIfNeeded();
+
+    const btn = document.getElementById('connect-btn');
+    const statusText = document.getElementById('amqp-status-text');
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+
+    const config = {
+        host: document.getElementById('amqp-host').value,
+        port: parseInt(document.getElementById('amqp-port').value) || 5672
+    };
+
+    try {
+        const response = await fetch('/api/amqp/connect', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(config)
+        });
+        
+        if (response.status === 401) {
+            showLoginRequired();
+            return;
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateConnectionUI(true);
+            loadSubscriptions();
+        } else {
+            updateConnectionUI(false);
+            statusText.textContent = result.error || 'Connection failed';
+            statusText.style.color = '#ef4444';
+        }
+    } catch (err) {
+        console.error('Connect failed:', err);
+        updateConnectionUI(false);
+        statusText.textContent = err.message || 'Connection failed';
+        statusText.style.color = '#ef4444';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Connect';
+    }
+};
+
+window.disconnectBroker = async function() {
+    if (!keycloak || !keycloak.authenticated) {
+        return;
+    }
+
+    await refreshTokenIfNeeded();
+
+    const btn = document.getElementById('disconnect-btn');
+    btn.disabled = true;
+    btn.textContent = 'Disconnecting...';
+
+    try {
+        const response = await fetch('/api/amqp/disconnect', { 
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        const result = await response.json();
+        updateConnectionUI(result.connected);
+    } catch (err) {
+        console.error('Disconnect failed:', err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Disconnect';
+    }
+};
+
+async function loadSubscriptions() {
+    if (!keycloak || !keycloak.authenticated) {
+        return;
+    }
+
+    await refreshTokenIfNeeded();
+
+    const loading = document.getElementById('subscriptions-loading');
+    const table = document.getElementById('subscriptions-table');
+    const noSubs = document.getElementById('no-subscriptions');
+    const tbody = document.getElementById('subscriptions-body');
+    const countEl = document.getElementById('queue-count');
+
+    try {
+        const response = await fetch('/api/amqp/subscriptions', {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.status === 401) {
+            showLoginRequired();
+            return;
+        }
+        
+        const subscriptions = await response.json();
+
+        loading.style.display = 'none';
+        countEl.textContent = subscriptions.length;
+
+        if (subscriptions.length === 0) {
+            noSubs.style.display = 'block';
+            table.style.display = 'none';
+        } else {
+            noSubs.style.display = 'none';
+            table.style.display = 'table';
+            tbody.innerHTML = subscriptions.map(s => `
+                <tr>
+                    <td>$\{s.subscriptionId\}</td>
+                    <td>$\{s.queueName\}</td>
+                    <td><span class="status-badge $\{s.status?.toLowerCase()\}">$\{s.status\}</span></td>
+                    <td>$\{s.createdAt\}</td>
+                </tr>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('Failed to load subscriptions:', err);
+        loading.textContent = 'Failed to load subscriptions';
+    }
+}
+
+window.testQueueAccess = async function() {
+    if (!keycloak || !keycloak.authenticated) {
+        alert('Please login first');
+        return;
+    }
+
+    await refreshTokenIfNeeded();
+
+    const queueName = document.getElementById('test-queue-name').value.trim();
+    const resultDiv = document.getElementById('queue-test-result');
+    const btn = document.getElementById('test-queue-btn');
+
+    if (!queueName) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'queue-test-result info';
+        resultDiv.textContent = 'Please enter a queue name to test.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'queue-test-result info';
+    resultDiv.textContent = 'Attempting to access queue: ' + queueName + '...';
+
+    try {
+        const response = await fetch('/api/amqp/test-queue', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ queueName: queueName })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            resultDiv.className = 'queue-test-result success';
+            resultDiv.textContent = '✓ Access granted to queue: ' + queueName;
+        } else {
+            resultDiv.className = 'queue-test-result error';
+            resultDiv.textContent = '✗ Access denied: ' + (result.error || 'Unknown error');
+        }
+    } catch (err) {
+        resultDiv.className = 'queue-test-result error';
+        resultDiv.textContent = '✗ Request failed: ' + err.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Test Access';
+    }
+};
+
+window.addEventListener('beforeunload', () => {
+    stopHeartbeat();
+});
+
+initAmqpPage();
+</script>
+
+{/content}
+{/include}
+

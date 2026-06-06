@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swim-dnotam-provider-validator
+  labels:
+    app: swim-dnotam-provider-validator
+    app.kubernetes.io/name: swim-dnotam-provider-validator
+    app.kubernetes.io/component: dnotam-provider-validator
+    app.kubernetes.io/part-of: swim-dnotam
+    app.kubernetes.io/singleton: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swim-dnotam-provider-validator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: swim-dnotam-provider-validator
+        app.kubernetes.io/name: swim-dnotam-provider-validator
+        app.kubernetes.io/component: dnotam-provider-validator
+        app.kubernetes.io/part-of: swim-dnotam
+        app.kubernetes.io/singleton: "true"
+    spec:
+      containers:
+        - name: provider-validator
+          image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/swim-dnotam-provider-validator:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: http
+          envFrom:
+            - configMapRef:
+                name: swim-dnotam-provider-validator-config
+            - secretRef:
+                name: swim-dnotam-provider-validator-mtls
+                optional: true
+          volumeMounts:
+            - name: client-certs
+              mountPath: /certs/client
+              readOnly: true
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: client-certs
+          secret:
+            secretName: swim-dnotam-provider-validator-certs
+            optional: true
+        - name: data
+          persistentVolumeClaim:
+            claimName: swim-dnotam-provider-validator-data
+

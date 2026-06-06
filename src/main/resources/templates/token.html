@@ -1,0 +1,108 @@
+{#include 'layout.html'}
+{#title}Token Management{/title}
+{#content}
+<div id="message-container"></div>
+
+<div class="token-toolbar">
+    <div class="token-info-bar" id="token-info-bar" style="display: none;">
+        <span id="token-expiry-info"></span>
+        <span class="info-separator">|</span>
+        <span id="token-email-info"></span>
+        <span class="info-separator">|</span>
+        <span id="token-user-info"></span>
+        <span class="info-separator">|</span>
+        <span class="status-badge status-active" id="auth-badge">Authenticated</span>
+    </div>
+    <div class="token-actions">
+        <button class="btn btn-secondary btn-sm" id="refresh-token-button" style="display: none;">Refresh</button>
+        <button class="btn btn-danger btn-sm" id="logout-button" style="display: none;">Logout</button>
+        <button class="btn btn-primary" id="login-button" style="display: none;">Login with Keycloak</button>
+    </div>
+</div>
+
+<div id="auth-status" style="display: none;"></div>
+
+<div class="jwt-container" id="jwt-container" style="display: none;">
+    <div class="jwt-panel jwt-encoded">
+        <div class="jwt-panel-header">
+            <h3>ENCODED TOKEN</h3>
+            <button class="btn btn-secondary btn-sm" onclick="copyToken()">Copy</button>
+        </div>
+        <div class="jwt-panel-content">
+            <div class="jwt-token-display" id="raw-token-content"></div>
+        </div>
+        <div class="jwt-legend">
+            <span class="jwt-legend-item"><span class="jwt-legend-color jwt-header"></span>Header</span>
+            <span class="jwt-legend-item"><span class="jwt-legend-color jwt-payload"></span>Payload</span>
+            <span class="jwt-legend-item"><span class="jwt-legend-color jwt-signature"></span>Signature</span>
+        </div>
+    </div>
+    
+    <div class="jwt-panel jwt-decoded">
+        <div class="jwt-panel-header">
+            <div class="jwt-tabs">
+                <button class="jwt-tab active" data-tab="access">Access Token</button>
+                <button class="jwt-tab" data-tab="id">ID Token</button>
+            </div>
+        </div>
+        <div class="jwt-panel-content">
+            <div class="jwt-tab-content active" id="tab-access">
+                <div class="jwt-section">
+                    <div class="jwt-section-label">HEADER</div>
+                    <pre class="token-pre"><code class="language-json" id="access-header-content"></code></pre>
+                </div>
+                <div class="jwt-section">
+                    <div class="jwt-section-label">PAYLOAD</div>
+                    <pre class="token-pre"><code class="language-json" id="access-token-content"></code></pre>
+                </div>
+            </div>
+            <div class="jwt-tab-content" id="tab-id">
+                <div class="jwt-section">
+                    <div class="jwt-section-label">HEADER</div>
+                    <pre class="token-pre"><code class="language-json" id="id-header-content"></code></pre>
+                </div>
+                <div class="jwt-section">
+                    <div class="jwt-section-label">PAYLOAD</div>
+                    <pre class="token-pre"><code class="language-json" id="id-token-content"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="login-prompt" id="login-prompt">
+    <div class="login-prompt-content">
+        <h2>Authentication Required</h2>
+        <p>Login via Keycloak to view your JWT token.</p>
+        <button class="btn btn-primary btn-lg" id="login-button-center" style="margin-top: 1.5rem;">Login with Keycloak</button>
+    </div>
+</div>
+
+<script>
+function copyToken() {
+    const tokenText = document.getElementById('raw-token-content').textContent;
+    navigator.clipboard.writeText(tokenText).then(() => {
+        const container = document.getElementById('message-container');
+        const msg = document.createElement('div');
+        msg.className = 'message message-success';
+        msg.textContent = 'Token copied to clipboard!';
+        container.appendChild(msg);
+        setTimeout(() => msg.remove(), 3000);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.jwt-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            document.querySelectorAll('.jwt-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        });
+    });
+});
+</script>
+{/content}
+{/include}

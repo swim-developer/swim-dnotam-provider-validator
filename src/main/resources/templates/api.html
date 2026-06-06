@@ -1,0 +1,162 @@
+{#include 'layout.html'}
+{#title}Provider API{/title}
+{#content}
+<div id="message-container"></div>
+
+<div class="api-swagger-container">
+    <div class="api-swagger-list">
+        <div class="swagger-group">
+            <div class="swagger-group-header" onclick="toggleGroup(this)">
+                <div class="swagger-group-info">
+                    <h3>Subscriptions</h3>
+                    <span class="swagger-group-desc">Subscription lifecycle management</span>
+                </div>
+                <span class="swagger-group-toggle">▼</span>
+            </div>
+            <div class="swagger-group-content">
+                <div class="swagger-endpoint" data-id="createSubscription">
+                    <span class="swagger-method post">POST</span>
+                    <span class="swagger-path">/swim/v1/subscriptions</span>
+                    <span class="swagger-summary">Create a new subscription</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="listSubscriptions">
+                    <span class="swagger-method get">GET</span>
+                    <span class="swagger-path">/swim/v1/subscriptions</span>
+                    <span class="swagger-summary">Get list of subscriptions</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="getSubscription">
+                    <span class="swagger-method get">GET</span>
+                    <span class="swagger-path">/swim/v1/subscriptions/:subscriptionId</span>
+                    <span class="swagger-summary">Get subscription details</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="updateSubscription">
+                    <span class="swagger-method put">PUT</span>
+                    <span class="swagger-path">/swim/v1/subscriptions/:subscriptionId</span>
+                    <span class="swagger-summary">Update subscription status</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="deleteSubscription">
+                    <span class="swagger-method delete">DELETE</span>
+                    <span class="swagger-path">/swim/v1/subscriptions/:subscriptionId</span>
+                    <span class="swagger-summary">Delete subscription</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="swagger-group">
+            <div class="swagger-group-header" onclick="toggleGroup(this)">
+                <div class="swagger-group-info">
+                    <h3>Topics</h3>
+                    <span class="swagger-group-desc">Event scenario catalog</span>
+                </div>
+                <span class="swagger-group-toggle">▼</span>
+            </div>
+            <div class="swagger-group-content">
+                <div class="swagger-endpoint" data-id="listTopics">
+                    <span class="swagger-method get">GET</span>
+                    <span class="swagger-path">/swim/v1/topics</span>
+                    <span class="swagger-summary">Get list of available topics</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="getTopic">
+                    <span class="swagger-method get">GET</span>
+                    <span class="swagger-path">/swim/v1/topics/:topicId</span>
+                    <span class="swagger-summary">Get topic details</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="swagger-group">
+            <div class="swagger-group-header" onclick="toggleGroup(this)">
+                <div class="swagger-group-info">
+                    <h3>Request Interface (WFS)</h3>
+                    <span class="swagger-group-desc">OGC Web Feature Service for direct DNOTAM queries</span>
+                </div>
+                <span class="swagger-group-toggle">▼</span>
+            </div>
+            <div class="swagger-group-content">
+                <div class="swagger-endpoint" data-id="getFeatures">
+                    <span class="swagger-method get">GET</span>
+                    <span class="swagger-path">/swim/v1/features</span>
+                    <span class="swagger-summary">Query DNOTAM features (WFS GetFeature)</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+                <div class="swagger-endpoint" data-id="postFeatures">
+                    <span class="swagger-method post">POST</span>
+                    <span class="swagger-path">/swim/v1/features</span>
+                    <span class="swagger-summary">Query DNOTAM features with OGC Filter</span>
+                    <span class="swagger-icons"><span class="swagger-lock">🔒</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="api-detail-panel" id="api-detail-panel">
+        <div class="api-detail-placeholder">
+            <div class="placeholder-icon">📡</div>
+            <h3>Select an endpoint</h3>
+            <p>Click on an API endpoint from the list to view its details and execute requests.</p>
+        </div>
+        
+        <div class="api-detail-content" id="api-detail-content" style="display: none;">
+            <div class="api-detail-header">
+                <span class="method-badge" id="detail-method"></span>
+                <span class="detail-path" id="detail-path"></span>
+            </div>
+            <p class="api-description" id="detail-description"></p>
+            
+            <div class="api-section">
+                <h4>Server</h4>
+                <select class="form-control" id="api-server">
+                    <option value="https://swim-dnotam-provider-swim-sandbox.apps.ocp4.masales.cloud">swim-dnotam-provider (OIDC)</option>
+                    <option value="https://swim-dnotam-provider-mtls-swim-sandbox.apps.ocp4.masales.cloud">swim-dnotam-provider-mtls (mTLS)</option>
+                </select>
+            </div>
+            
+            <div class="api-section" id="params-section" style="display: none;">
+                <h4>Parameters</h4>
+                <div id="params-container"></div>
+            </div>
+            
+            <div class="api-section" id="body-section" style="display: none;">
+                <h4>Request Body</h4>
+                <textarea class="form-control code-textarea" id="request-body" rows="10"></textarea>
+            </div>
+            
+            <div class="api-actions">
+                <button class="btn btn-primary" id="execute-btn" onclick="executeRequest()">Execute</button>
+                <button class="btn btn-secondary" id="clear-btn" onclick="clearResponse()">Clear</button>
+            </div>
+            
+            <div class="api-section" id="response-section" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 0;">Response <span class="response-status" id="response-status"></span></h4>
+                    <button class="btn btn-sm btn-secondary" id="copy-subscription-id-btn" style="display: none;" onclick="copySubscriptionId()">Copy subscription_id</button>
+                </div>
+                <pre class="token-pre"><code class="language-json" id="response-body"></code></pre>
+            </div>
+            
+            <div class="api-section" id="examples-section" style="display: none; border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem;">
+                <h4>Request Examples</h4>
+                <div id="examples-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleGroup(header) {
+    const content = header.nextElementSibling;
+    const toggle = header.querySelector('.swagger-group-toggle');
+    content.classList.toggle('collapsed');
+    toggle.textContent = content.classList.contains('collapsed') ? '▶' : '▼';
+}
+</script>
+<script type="module" src="/static/js/api-client.js"></script>
+{/content}
+{/include}
